@@ -85,10 +85,11 @@ class LearningAgent(Agent):
         ## TO DO ##
         ###########
         # Calculate the maximum Q-value of all actions for a given state
+
         maxQ = -1e7
-        for qvalue in self.Q[state].values():
-            if qvalue > maxQ:
-                maxQ = qvalue
+        for action in self.Q[state]:
+            if maxQ < self.Q[state][action]:
+                maxQ = self.Q[state][action]
         return maxQ
 
     def createQ(self, state):
@@ -100,9 +101,8 @@ class LearningAgent(Agent):
         # When learning, check if the 'state' is not in the Q-table
         # If it is not, create a new dictionary for that state
         #   Then, for each action available, set the initial Q-value to 0.0
-        default_value = {None:0.0, 'forward':0.0, 'left':0.0, 'right':0.0}
-        if self.learning and state not in self.Q:
-            self.Q[state] = default_value
+        if self.learning:
+            self.Q[state] = self.Q.get(state, {None:0.0, 'forward':0.0, 'left':0.0, 'right':0.0})
         return
 
 
@@ -124,7 +124,7 @@ class LearningAgent(Agent):
         if not self.learning:
             action = random.choice(self.valid_actions)
         else:
-            if self.epsilon > random.random():
+            if self.epsilon > 0.01 and self.epsilon > random.random():
                 action = random.choice(self.valid_actions)
             else:
                 valid_actions = []
@@ -147,8 +147,9 @@ class LearningAgent(Agent):
         # When learning, implement the value iteration update rule
         #   Use only the learning rate 'alpha' (do not use the discount factor 'gamma')
         if self.learning:
-            self.Q[state][action] = (1 - self.alpha) * self.Q[state][action] + self.alpha * reward
+            self.Q[state][action] = self.Q[state][action] + self.alpha*(reward-self.Q[state][action])
         return
+
 
     def update(self):
         """ The update function is called when a time step is completed in the
